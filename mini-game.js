@@ -22,7 +22,7 @@ function almost()     { tone(440, 0.12, 'triangle', 0.1); }
 function levelClear() { [523,659,784].forEach((f,i) => setTimeout(() => tone(f, 0.18, 'sine', 0.15), i*110)); }
 
 // ── Level files (inline) ─────────────────────────────────────────────────────
-// Loaded via import in index-mini.html; LEVELS is assembled after imports.
+// Loaded via import in index.html; LEVELS is assembled after imports.
 // (See bottom of this file for LEVELS assembly.)
 
 // ── State ────────────────────────────────────────────────────────────────────

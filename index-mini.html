@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dark Patterns — Mini Game</title>
+  <link rel="stylesheet" href="styles.css">
+  <style>
+    .mini-badge {
+      display: inline-block;
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+      background: var(--purple-dim);
+      color: var(--purple-light);
+      border: 1px solid var(--purple);
+      border-radius: 999px;
+      padding: 2px 9px;
+    }
+    /* Info bar below HUD */
+    #h-info-bar {
+      display: none;
+      align-items: center;
+      gap: 10px;
+      padding: 8px clamp(12px,3vw,20px);
+      background: var(--bg3);
+      border-bottom: 1px solid var(--border);
+      font-size: 13px;
+      color: var(--text2);
+      flex-wrap: wrap;
+    }
+  </style>
+</head>
+<body>
+  <div id="app">
+
+    <!-- ── INTRO ── -->
+    <div id="scr-intro" class="scr active" style="align-items:center;justify-content:center;padding:36px 20px;gap:22px;background:var(--bg);overflow-y:auto;text-align:center">
+      <span class="mini-badge">Mini Game</span>
+      <div style="font-size:clamp(28px,6vw,40px);font-weight:600;color:var(--text);line-height:1.1;max-width:600px">
+        Dark Patterns<br><span style="color:var(--purple-light)">Roach Motel + AI</span>
+      </div>
+      <div style="font-size:clamp(14px,3vw,17px);color:var(--text-soft);line-height:1.6;max-width:500px">
+        Three levels. Cancel a subscription, resist an AI chatbot, and spot AI-generated reviews.<br>
+        Can you beat all three without being manipulated?
+      </div>
+      <div style="display:flex;flex-direction:column;gap:10px;align-items:center">
+        <button class="gbtn gbtn-green" onclick="G.start()" style="font-size:clamp(15px,3.5vw,18px)">Play →</button>
+        <div style="font-size:13px;color:var(--text3)">3 levels · ~5 minutes</div>
+      </div>
+      <!-- Jump to level -->
+      <details style="font-size:13px;color:var(--text2);cursor:pointer;text-align:center">
+        <summary style="list-style:none;outline:none;cursor:pointer;color:var(--text3)">Jump to level</summary>
+        <div style="display:flex;flex-wrap:wrap;gap:6px;justify-content:center;margin-top:8px" id="level-jump"></div>
+      </details>
+    </div>
+
+    <!-- ── BRIEF ── -->
+    <div id="scr-brief" class="scr">
+      <div class="brief-shell">
+        <div>
+          <div style="display:flex;gap:8px;align-items:center;margin-bottom:10px">
+            <span id="brief-lvl-label" class="brief-lvl-label"></span>
+            <span id="brief-type-label" class="brief-type-label"></span>
+          </div>
+          <div id="brief-pattern-name" class="brief-pattern"></div>
+        </div>
+
+        <div id="brief-what" class="brief-what"></div>
+
+        <div class="brief-goal-box">
+          <div class="brief-goal-label">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+            Your goal
+          </div>
+          <div id="brief-goal" class="brief-goal-text"></div>
+          <div id="brief-goal-detail" class="brief-goal-detail"></div>
+        </div>
+
+        <div id="brief-ai-note" class="brief-ai-note" style="display:none">
+          <div class="brief-ai-label">⚡ AI-Powered Level</div>
+          <div id="brief-ai-text" class="brief-ai-text"></div>
+        </div>
+
+        <div>
+          <button class="gbtn gbtn-green" onclick="G.beginLevel()">Start level →</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── LEVEL ── -->
+    <div id="scr-level" class="scr">
+      <!-- HUD -->
+      <div class="hud">
+        <div>
+          <div id="h-lvl" class="hud-lvl"></div>
+          <div id="h-goal" class="hud-goal"></div>
+        </div>
+        <div style="display:flex;gap:8px;align-items:center">
+          <span id="h-streak" class="streak-pill" style="display:none"></span>
+          <span class="score-pill"><span id="h-score">0</span> pts</span>
+          <button id="h-hint-btn" class="gbtn gbtn-ghost" style="font-size:13px;padding:7px 13px" onclick="G.showHint()">💡 Hint</button>
+          <button class="gbtn gbtn-ghost" style="font-size:13px;padding:7px 13px" onclick="G.toggleInfo()" title="Pattern info">ℹ️</button>
+        </div>
+      </div>
+
+      <!-- Info bar (toggled by ℹ️) -->
+      <div id="h-info-bar">
+        <span id="h-pattern" style="font-weight:500;color:var(--text)"></span>
+        <span style="color:var(--border2)">·</span>
+        <span id="h-info-text" style="color:var(--text3)"></span>
+      </div>
+
+      <div class="xp-track"><div id="xp-fill" class="xp-fill" style="width:0%"></div></div>
+      <div class="fake-app" id="lc"></div>
+      <div class="dots" id="dots-l"></div>
+    </div>
+
+    <!-- ── DEBRIEF ── -->
+    <div id="scr-debrief" class="scr">
+      <div class="db-sticky">
+        <div>
+          <div id="db-tag" class="db-tag"></div>
+          <div id="db-name" class="db-name"></div>
+          <div id="db-result" class="db-result good" style="margin-top:6px"></div>
+        </div>
+        <div style="display:flex;align-items:center;gap:10px">
+          <div id="db-grade" class="grade-badge"></div>
+          <button id="db-next-btn" class="gbtn gbtn-green" onclick="G.next()">Next level →</button>
+        </div>
+      </div>
+
+      <div class="debrief-scroll">
+        <div class="debrief-wrap">
+          <div class="db-card">
+            <div id="db-desc" class="db-desc"></div>
+            <div id="db-cost" style="border-top:1px solid var(--border);padding-top:12px"></div>
+          </div>
+
+          <div id="db-rw" class="db-card" style="display:none"></div>
+
+          <div id="db-ai-card" class="ai-card" style="display:none">
+            <div class="ai-card-label">⚡ Why AI makes this worse</div>
+            <div id="db-ai-why" class="ai-card-text"></div>
+          </div>
+
+          <div id="db-replay" class="replay-card" style="display:none"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── WIN ── -->
+    <div id="scr-win" class="scr win-scr">
+      <div style="font-size:48px">🎉</div>
+      <div style="font-size:clamp(24px,5vw,34px);font-weight:600;color:var(--text)">You made it!</div>
+      <div style="font-size:clamp(14px,3vw,17px);color:var(--text-soft);max-width:440px;line-height:1.6">
+        You spotted the tricks across all <span id="win-levels"></span> levels. Knowing the patterns is the best defence.
+      </div>
+
+      <div class="receipt-card">
+        <div style="font-size:13px;font-weight:600;color:var(--text3);letter-spacing:.06em;text-transform:uppercase;margin-bottom:8px">Level scores</div>
+        <div id="win-summary"></div>
+        <div class="receipt-total">
+          <span>Total score</span>
+          <span id="win-score"></span>
+        </div>
+      </div>
+
+      <button class="gbtn gbtn-green" onclick="location.reload()">Play again →</button>
+    </div>
+
+  </div><!-- #app -->
+
+  <canvas id="confetti-canvas"></canvas>
+
+  <script type="module">
+    import { G, setLevels } from './mini-game.js';
+    import level1   from './level1.js';
+    import level1ai from './level1ai.js';
+    import level3ai from './level3ai.js';
+
+    const LEVELS = [level1, level1ai, level3ai];
+    setLevels(LEVELS);
+
+    // Expose G globally so onclick= attributes in level HTML work
+    window.G = G;
+
+    // level1 uses bare almostGotYou — already exposed by mini-game.js
+    // level1ai uses window.chatSend — set dynamically by the level's render()
+
+    // level3ai calls succeed() / fail() without G. prefix
+    window.succeed = () => G.succeed();
+    window.fail    = (msg) => G.fail(msg);
+
+    // level3ai calls setLevelGrade(levelIdx, "F") — stub both
+    window.setLevelGrade = () => {};
+    window.addAch        = () => {};
+    // expose levelIdx read used inside level3ai's setLevelGrade call
+    Object.defineProperty(window, 'levelIdx', { get: () => 0 });
+
+    // ── Jump-to buttons ──────────────────────────────────────────────────────
+    const jumpEl = document.getElementById('level-jump');
+    LEVELS.forEach((lv, i) => {
+      const b = document.createElement('button');
+      b.className = 'btn btn-g';
+      b.style.cssText = 'font-size:14px;padding:6px 14px;border:0.5px solid #3a3a4e;color:var(--text2)';
+      b.textContent = lv.title;
+      b.onclick = () => G.jumpTo(i);
+      jumpEl.appendChild(b);
+    });
+
+    // Info bar is populated inside mini-game.js showLevel() directly.
+  </script>
+</body>
+</html>
